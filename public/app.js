@@ -42,6 +42,14 @@
 
         $scope.login = login;
         $scope.logout = logout;
+        $scope.register = register;
+        function register(username, password) {
+            UserFactory.register(username, password).then(function success(response) {
+                $rootScope.user = response.data.user;
+                alert("Welcome!")
+                $state.go('docs');
+            }, handleError);
+        }
 
         function login(username, password) {
             UserFactory.login(username, password).then(function success(response) {
@@ -64,6 +72,7 @@
     app.controller('DocCtrl', ['$scope','$rootScope','$state','UserFactory' ,
         'DocFactory', function ($scope, $rootScope, $state, UserFactory, DocFactory) {
         $scope.logout = logout;
+
         $scope.categories = [
             {'id': 0, 'name': 'Budget'},
             {'id': 1, 'name': 'NewsLetter'},

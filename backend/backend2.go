@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/auth0/go-jwt-middleware"
@@ -11,11 +10,12 @@ import (
 	"github.com/unrolled/render"
 	"io/ioutil"
 	"log"
-	// "mime"
 	"net/http"
-	// "os"
-	// "string"
 	"time"
+	// database
+	"database/sql"
+	"github.com/coopernurse/gorp"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -58,12 +58,14 @@ type Doc struct {
 var docs []Doc
 
 type User struct {
+	Id       int
 	Username string `json: username`
 	Password string `json: password`
 }
 
 type Server struct {
 	Ren *render.Render
+	db  *gorp.DbMap
 }
 
 type Token struct {
@@ -74,7 +76,10 @@ var admin User
 
 func main() {
 
-	s := Server{render.New()}
+	s := Server{
+		render.New(),
+		initDb(),
+	}
 
 	docs = []Doc{}
 
@@ -90,7 +95,7 @@ func main() {
 		Debug:               false,
 	})
 
-	admin = User{"admin", "admin"}
+	admin = User{1, "admin", "admin"}
 
 	router := mux.NewRouter()
 	apiRoutes := mux.NewRouter()
@@ -99,6 +104,7 @@ func main() {
 	n.Use(negroni.HandlerFunc(CorsMiddleware))
 
 	router.HandleFunc("/login", s.LoginHandler).Methods("POST")
+	router.HandleFunc("/register", s.RegisterHandler).Methods("POST")
 	apiRoutes.HandleFunc("/api/me", s.GetUserHandler).Methods("GET")
 	apiRoutes.HandleFunc("/api/docs/", s.GetDocsHandler).Methods("GET")
 	apiRoutes.HandleFunc("/api/files/{doc}", s.GetFileHandler)
@@ -147,14 +153,89 @@ func (s *Server) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	userAdmin := parsedToken.Claims["user"]
-	user := User{
-		"admin",
-		"admin",
+	username := parsedToken.Claims["user"].(string)
+
+	user, err := s.checkUser(username)
+	// fmt.Println(userAdmin)
+	if err != nil {
+		http.Error(w, "Invalid User", http.StatusInternalServerError)
+		return
 	}
-	fmt.Println(userAdmin)
 
 	s.Ren.JSON(w, http.StatusOK, &user)
+
+}
+
+func (s *Server) getUserAndAuth(username string, password string) (User, error) {
+	user := User{}
+	err := s.db.SelectOne(&user, "select * from users where Username=?", username)
+	fmt.Println(user.Username)
+	if err != nil {
+		return user, err
+	}
+
+	if user.Password != password {
+		return user, err
+	}
+
+	return user, nil
+}
+
+func (s *Server) checkUser(username string) (User, error) {
+	user := User{}
+	err := s.db.SelectOne(&user, "select * from users where Username=?", username)
+	fmt.Println(user.Username)
+	if err != nil {
+		fmt.Println(err.Error())
+		return user, err
+	}
+	return user, nil
+}
+
+func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	user := User{}
+	jsonDecoder := json.NewDecoder(r.Body)
+	err := jsonDecoder.Decode(&user)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println("User decoded")
+	// check to see if user exists
+	// user2 := User{}
+	// err = s.db.SelectOne(&user2, "select * from users where Username=?", user.Username)
+	// fmt.Println(user2.Username)
+	// if err == nil {
+	// 	fmt.Println(err.Error())
+	// }
+	// insert user in db
+
+	_, err = s.checkUser(user.Username)
+	if err != nil {
+		fmt.Println(err.Error())
+		// http.Error(w, "User already has an account", http.StatusInternalServerError)
+		// return
+	}
+
+	err = s.db.Insert(&user)
+	checkErr(err, "Insert failed")
+
+	// Token
+	t := jwt.New(jwt.GetSigningMethod("RS256"))
+	t.Claims["user"] = user.Username
+	t.Claims["exp"] = time.Now().Add(time.Minute * 60 * 24).Unix()
+	tokenString, err := t.SignedString(signKey)
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tok := Token{
+		tokenString,
+	}
+
+	// Send token
+	s.Ren.JSON(w, http.StatusOK, &tok)
 
 }
 
@@ -165,6 +246,14 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
+	user2, err := s.getUserAndAuth(user.Username, user.Password)
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+	}
+	fmt.Println(user2)
+	// token
 	t := jwt.New(jwt.GetSigningMethod("RS256"))
 	t.Claims["user"] = user.Username
 	t.Claims["exp"] = time.Now().Add(time.Minute * 60 * 24).Unix()
@@ -189,4 +278,32 @@ func (s *Server) GetFileHandler(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", mime.TypeByExtension(temp[length-1]))
 
 	http.ServeFile(w, r, "docs/"+doc)
+}
+
+func initDb() *gorp.DbMap {
+	// connect to db using standard Go database/sql API
+	// use whatever database/sql driver you wish
+	db, err := sql.Open("sqlite3", "db.sql")
+	checkErr(err, "sql.Open failed")
+
+	// construct a gorp DbMap
+	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+
+	// add a table, setting the table name to 'posts' and
+	// specifying that the Id property is an auto incrementing PK
+	dbmap.AddTableWithName(User{}, "users").SetKeys(true, "Id")
+
+	// create the table. in a production system you'd generally
+	// use a migration tool, or create the tables via scripts
+	err = dbmap.CreateTablesIfNotExists()
+	checkErr(err, "Create tables failed")
+
+	return dbmap
+}
+
+func checkErr(err error, msg string) {
+	if err != nil {
+		log.Fatalln(msg, err)
+		fmt.Println(msg, err)
+	}
 }
