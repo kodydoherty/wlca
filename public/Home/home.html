@@ -1,0 +1,187 @@
+
+<!-- Navigation -->
+  <link href="styles/stylish-portfolio.css" rel="stylesheet">
+<a id="menu-toggle" href="#" class="btn btn-dark btn-lg toggle"><i class="fa fa-bars"></i></a>
+<nav id="sidebar-wrapper">
+    <ul class="sidebar-nav">
+        <a id="menu-close" href="#" class="btn btn-light btn-lg pull-right toggle"><i class="fa fa-times"></i></a>
+        <li class="sidebar-brand">
+            <a href="#top">Start Bootstrap</a>
+        </li>
+        <li>
+            <a href="#top">Home</a>
+        </li>
+        <li>
+            <a href="#contact">Contact</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Header -->
+<header id="top" class="header">
+    <div class="text-vertical-center">
+        <h1 class="white">WLCA</h1>
+        <h3 class="white">Welcome to our community site. This site is private and only residents of Walden's Landing Community.</h3>
+        <br>
+        <a class="btn btn-dark btn-lg" data-toggle="modal" data-target="#loginModal">Log in</a>
+    </div>
+</header>
+
+<!-- About -->
+<section id="about" class="about">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2>About Us </h2>
+                <p class="lead">We are one of the oldest townhouse communities in Columbia located on Jackson Pond.  As a part of the planned community of Columbia, there are guidelines for all residents when it comes to changes in the landscape or design of our homes.  In addition, the Walden’s Landing Community Association (WLCA) has developed guidelines to enable all of us to live together in a spirit of cooperation and harmony.</p>
+                <p class="lead">The Association is to help all residents in answering questions, solving problems, and ensuring the land we hold in common is well-maintained.  The land that we hold in common is the responsibility of the Community.  Land closest to Jackson Pond is the responsibility of the Columbia Association (CA).  And, of course, you are responsible for the property which you own.</p>
+            </div>
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container -->
+</section>
+
+
+<!-- Call to Action -->
+<aside class="call-to-action bg-primary">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h3>Request and account</h3>
+                <p>Email Kody at kodydoherty@gmail.com</p>
+                <a href="mailto:kodydoherty@gmail.com" class="btn btn-lg btn-light">Email</a>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Map -->
+<section id="contact" class="map">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d49460.16012030163!2d-76.82090549999995!3d39.2142602!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89b7e008a8f09fc9%3A0x7ad614379e06af65!2sPhelps+Luck+Dr%2C+Columbia%2C+MD+21045!5e0!3m2!1sen!2sus!4v1424301174021" width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"></iframe>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 col-lg-offset-1 text-center">
+                <h4><strong>WLCA</strong>
+                </h4>
+                <p>Phelps Luck dr<br>Columbia, MD 21045</p>
+                <ul class="list-unstyled">
+
+                    <li><i class="fa fa-envelope-o fa-fw"></i> <a href="mailto:dave.brown.navigator@gmail.com"> President: dave.brown.navigator@gmail.com </a>
+                    </li>
+                    <li><i class="fa fa-envelope-o fa-fw"></i><a href="mailto:jalbert.aia@gmail.com">Treasurer: jalbert.aia@gmail.com</a>
+                    </li>
+                    <li><i class="fa fa-envelope-o fa-fw"></i>  <a href="mailto:kodydoherty@gmail.com">Support: kodydoherty@gmail.com</a>
+                    </li>
+                </ul>
+                <br>
+                <ul class="list-inline">
+               <!--          <li>
+                            <a href="#"><i class="fa fa-facebook fa-fw fa-3x"></i></a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-twitter fa-fw fa-3x"></i></a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-dribbble fa-fw fa-3x"></i></a>
+                        </li> -->
+                    </ul>
+                    <hr class="small">
+                    <p class="text-muted">Copyright &copy; WLCA 2015</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script>
+    // Closes the sidebar menu
+    $("#menu-close").click(function(e) {
+        e.preventDefault();
+        $("#sidebar-wrapper").toggleClass("active");
+    });
+
+    // Opens the sidebar menu
+    $("#menu-toggle").click(function(e) {
+        e.preventDefault();
+        $("#sidebar-wrapper").toggleClass("active");
+    });
+
+    // Scrolls to the selected menu item on the page
+    $(function() {
+        $('a[href*=#]:not([href=#])').click(function() {
+            if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') || location.hostname == this.hostname) {
+
+                var target = $(this.hash);
+                target = target.length ? target : $('[name=' + this.hash.slice(1) + ']');
+                if (target.length) {
+                    $('html,body').animate({
+                        scrollTop: target.offset().top
+                    }, 1000);
+                    return false;
+                }
+            }
+        });
+    });
+</script>
+
+
+<div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="myModalLabel">Log in</h4>
+            </div> <!-- /.modal-header -->
+
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="uLogin" placeholder="Login" ng-model="username" >
+                            <label for="uLogin" class="input-group-addon glyphicon glyphicon-user"></label>
+                        </div>
+                    </div> <!-- /.form-group -->
+
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="uPassword" placeholder="Password" ng-model="password">
+                            <label for="uPassword" class="input-group-addon glyphicon glyphicon-lock"></label>
+                        </div> <!-- /.input-group -->
+                    </div> <!-- /.form-group -->
+
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox"> Remember me
+                        </label>
+                    </div> <!-- /.checkbox -->
+                </form>
+
+            </div> <!-- /.modal-body -->
+
+            <div class="modal-footer">
+                <button ng-click="login(username, password)" class="form-control btn btn-primary">Ok</button>
+
+                <div class="progress">
+                    <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="100" style="width: 0%;">
+                        <span class="sr-only">progress</span>
+                    </div>
+                </div>
+            </div> <!-- /.modal-footer -->
+
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+</div>

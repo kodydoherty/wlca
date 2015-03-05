@@ -1,0 +1,1 @@
+"use strict";var app=angular.module("app.docs",["app"]);app.factory("DocFactory",function t(n,r){function a(){return n.get(r+"/api/docs/").then(function t(n){return n})}return{getDocs:a}});
