@@ -152,6 +152,7 @@ func (s *Server) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		"admin",
 		"admin",
 	}
+	fmt.Println(userAdmin)
 
 	s.Ren.JSON(w, http.StatusOK, &user)
 
@@ -166,7 +167,7 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	t := jwt.New(jwt.GetSigningMethod("RS256"))
 	t.Claims["user"] = user.Username
-	t.Claims["exp"] = time.Now().Add(time.Minute * 1).Unix()
+	t.Claims["exp"] = time.Now().Add(time.Minute * 60 * 24).Unix()
 	tokenString, err := t.SignedString(signKey)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
