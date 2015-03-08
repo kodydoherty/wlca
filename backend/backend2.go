@@ -17,6 +17,7 @@ import (
 	"database/sql"
 	"github.com/coopernurse/gorp"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -75,6 +76,7 @@ type User struct {
 	Id       int
 	Username string `json: username`
 	Password string `json: password`
+	Hash     []byte
 }
 
 type Server struct {
@@ -118,8 +120,6 @@ func main() {
 		CredentialsOptional: true,
 		Debug:               false,
 	})
-
-	admin = User{1, "admin", "admin"}
 
 	router := mux.NewRouter()
 	apiRoutes := mux.NewRouter()
@@ -203,6 +203,10 @@ func (s *Server) getUserAndAuth(username string, password string) (User, error) 
 	if user.Password != password {
 		return user, err
 	}
+	err = bcrypt.CompareHashAndPassword(user.Hash, []byte(password))
+	if err != nil {
+		return user, err
+	}
 
 	return user, nil
 }
@@ -241,7 +245,10 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		// http.Error(w, "User already has an account", http.StatusInternalServerError)
 		// return
 	}
-
+	hash := []byte(user.Password)
+	user.Hash, err = bcrypt.GenerateFromPassword(hash, bcrypt.DefaultCost)
+	checkErr(err, "hash failed")
+	user.Password = ""
 	err = s.db.Insert(&user)
 	checkErr(err, "Insert failed")
 
