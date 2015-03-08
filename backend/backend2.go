@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 	"time"
 	// database
 	"database/sql"
@@ -21,6 +22,7 @@ import (
 const (
 	privKeyPath = "demo.rsa"     // openssl genrsa -out app.rsa keysize
 	pubKeyPath  = "demo.rsa.pub" // openssl rsa -in app.rsa -pubout > app.rsa.pub
+	API_KEY     = "http://localhost:3000/api/files/"
 )
 
 // keys are held in global variables
@@ -48,6 +50,8 @@ func init() {
 	}
 }
 
+type Docs []Doc
+
 type Doc struct {
 	Title string
 	Url   string
@@ -55,7 +59,17 @@ type Doc struct {
 	Date  int
 }
 
-var docs []Doc
+func (s Docs) Len() int {
+	return len(s)
+}
+func (s Docs) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s Docs) Less(i, j int) bool {
+	return s[i].Date > s[j].Date
+}
+
+var docs Docs
 
 type User struct {
 	Id       int
@@ -81,14 +95,24 @@ func main() {
 		initDb(),
 	}
 
-	docs = []Doc{}
+	docs = Docs{}
 
-	doc1 := Doc{"Board Agenda May 4 2013", "http://localhost:3000/api/files/BoardAgenda4May2013.pdf", "Meeting Minutes", 20130504}
-	doc2 := Doc{"Board Agenda March 8 2014", "http://localhost:3000/api/files/BoardAgenda8March2014.pdf", "Meeting Minutes", 20140308}
-	doc3 := Doc{"Board Agenda October 6 2013.pdf", "http://localhost:3000/api/files/BoardAgenda6October2013.pdf", "Meeting Minutes", 20131106}
+	doc1 := Doc{"Board Agenda May 4 2013", API_KEY + "BoardAgenda4May2013.pdf", "Meeting Minutes", 20130504}
+	doc2 := Doc{"Board Agenda March 8 2014", API_KEY + "BoardAgenda8March2014.pdf", "Meeting Minutes", 20140308}
+	doc3 := Doc{"Board Agenda October 6 2013", API_KEY + "BoardAgenda6October2013.pdf", "Meeting Minutes", 20131106}
+	doc4 := Doc{"Board  Meeting Minutes July 20 2013", API_KEY + "BoardMeetingMinutesJuly202013.pdf", "Meeting Minutes", 20130720}
+	doc5 := Doc{"Fall 2013 Newsletter", API_KEY + "Fall13Newsletter.pdf", "NewsLetter", 20131001}
+	doc6 := Doc{"Spring 2013 Newsletter", API_KEY + "AnnualMeeting2013.pdf", "NewsLetter", 20130401}
+	doc7 := Doc{"2013 Annual and Organizational Meeting Minutes", API_KEY + "2013AnnualandOrganizationalMeetingMinutes.pdf", "Meeting Minutes", 20130401}
+	doc8 := Doc{"Mar 8 2014 Minutes", API_KEY + "Mar82014Minutes.pdf", "Meeting Minutes", 20140308}
+	doc9 := Doc{"May  2013 Minutes", API_KEY + "May2013Minutes.pdf", "Meeting Minutes", 20130501}
+	doc10 := Doc{"Oct  2013 Minutes", API_KEY + "Oct2013Minutes.pdf", "Meeting Minutes", 20131101}
+	doc11 := Doc{"Sept 2013 Minutes", API_KEY + "Sept2013Minutes.pdf", "Meeting Minutes", 20130901}
+	doc12 := Doc{"Welcometo Walden's Landing April 2013.pdf", API_KEY + "WelcometoWalden'sLandingApril2013.pdf", "Welcome To Walden", 20130401}
+	doc13 := Doc{"Record of WLCA Actions Between Meeting Sept Oct 2012", API_KEY + "RecordofWLCAActionsBetweenMeetingsSepOct2012.pdf", "Meeting Minutes", 20120901}
 
-	docs = append(docs, doc1, doc2, doc3)
-
+	docs = append(docs, doc1, doc2, doc3, doc4, doc5, doc6, doc7, doc8, doc9, doc10, doc11, doc12, doc13)
+	sort.Sort(docs)
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: parseToken,
 		CredentialsOptional: true,
@@ -107,7 +131,9 @@ func main() {
 	router.HandleFunc("/register", s.RegisterHandler).Methods("POST")
 	apiRoutes.HandleFunc("/api/me", s.GetUserHandler).Methods("GET")
 	apiRoutes.HandleFunc("/api/docs/", s.GetDocsHandler).Methods("GET")
-	apiRoutes.HandleFunc("/api/files/{doc}", s.GetFileHandler)
+	apiRoutes.HandleFunc("/api/files/{doc}", s.GetFileHandler).Methods("GET")
+	apiRoutes.HandleFunc("/api/files/", s.PostFileHandler).Methods("POST")
+
 	// n.Use(CorsMiddleware)
 	router.PathPrefix("/api").Handler(negroni.New(
 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
@@ -278,6 +304,10 @@ func (s *Server) GetFileHandler(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", mime.TypeByExtension(temp[length-1]))
 
 	http.ServeFile(w, r, "docs/"+doc)
+}
+
+func (s *Server) PostFileHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "hit file server", http.StatusInternalServerError)
 }
 
 func initDb() *gorp.DbMap {
